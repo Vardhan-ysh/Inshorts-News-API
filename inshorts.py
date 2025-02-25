@@ -3,6 +3,7 @@ import datetime
 import uuid
 import requests
 import pytz
+import random
 
 
 headers = {
@@ -63,6 +64,9 @@ def getNews(category='all'):
         newsDictionary['success'] = False
         newsDictionary['error'] = 'No News Available'
         return newsDictionary
+
+    # Shuffle the all_news_data list randomly
+    random.shuffle(all_news_data)
 
     for entry in all_news_data:
         try:
