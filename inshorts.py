@@ -27,33 +27,51 @@ params = (
 )
 
 
-def getNews(category):
-    if category == 'all':
-        response = requests.get(
-            'https://inshorts.com/api/en/news?category=all_news&include_card_data=true')
-    else:
-        response = requests.get(
-            f'https://inshorts.com/api/en/search/trending_topics/{category}', headers=headers, params=params)
-    try:
-        news_data = response.json()['data']['news_list']
-    except Exception as e:
-        print(response.text)
-        news_data = None
+def getNews(category='all'):
+    categories = ['top_stories', 'trending', 'india', 'business', 'politics', 'technology', 'entertainment', 'sports']
+    
+    news_set = set()  # Using set to avoid duplicates
+    all_news_data = []
+
+    # Get news from all categories
+    for cat in categories:
+        if cat == 'top_stories':
+            response = requests.get(
+                'https://inshorts.com/api/en/news?category=all_news&include_card_data=true')
+        else:
+            response = requests.get(
+                f'https://inshorts.com/api/en/search/trending_topics/{cat}', 
+                headers=headers, 
+                params=params
+            )
+        
+        try:
+            news_data = response.json()['data']['news_list']
+            if news_data:
+                all_news_data.extend(news_data)
+        except Exception as e:
+            print(f"Error fetching {cat}: {str(e)}")
+            continue
 
     newsDictionary = {
         'success': True,
-        'category': category,
+        'category': 'all',
         'data': []
     }
 
-    if not news_data:
-        newsDictionary['success'] = response.json()['error']
-        newsDictionary['error'] = 'Invalid Category'
+    if not all_news_data:
+        newsDictionary['success'] = False
+        newsDictionary['error'] = 'No News Available'
         return newsDictionary
 
-    for entry in news_data:
+    for entry in all_news_data:
         try:
             news = entry['news_obj']
+            # Use title as unique identifier to avoid duplicates
+            if news['title'] in news_set:
+                continue
+            news_set.add(news['title'])
+            
             author = news['author_name']
             title = news['title']
             imageUrl = news['image_url']
@@ -81,6 +99,8 @@ def getNews(category):
                 'readMoreUrl': readMoreUrl
             }
             newsDictionary['data'].append(newsObject)
-        except Exception:
-            print(entry)
+        except Exception as e:
+            print(f"Error processing news entry: {str(e)}")
+            continue
+
     return newsDictionary
