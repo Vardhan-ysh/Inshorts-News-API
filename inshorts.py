@@ -288,6 +288,8 @@ def getNews(category='all'):
     """
     Fetch crime and justice news from Inshorts for 2025 only, returning as a dictionary.
     """
+    categories=None, keywords=None, exclude_keywords=None
+    
     if categories is None:
         categories, keywords, exclude_keywords = get_crime_and_justice_keywords()
     
